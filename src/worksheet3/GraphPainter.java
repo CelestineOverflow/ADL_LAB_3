@@ -13,28 +13,29 @@
  * --/1.0  | B. Gottfried  | Initial Create.
  *         | 10-12-20      |
  *---------|---------------|---------------------------------------------------
- *         | author        |
- *         | dd-mm-yy      |
+ *         | C. S. Machuca | New Graphics.
+ *         | 14-12-2021    |
  *---------|---------------|---------------------------------------------------
  */
 
 package worksheet3;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Iterator;
 import javax.swing.JFrame;
 
 public class GraphPainter extends Canvas {
     //Size
-    private static Dimension DEFAULT_WINDOWS_SIZE = new Dimension(1600 , 800);
-    private static int DEFAULT_VERTEX_SIZE = 40;
+    private static final Dimension DEFAULT_WINDOWS_SIZE = new Dimension(1600 , 800);
+    private static final int DEFAULT_VERTEX_SIZE = 50;
     //Colors
-    private static Color VERTEX_COLOR = new Color(121, 0, 59);
-    private static Color WINDOWS_BACKGROUND_COLOR = new Color(65, 92, 69);
+    private static final Color VERTEX_COLOR = new Color(0, 85, 77);
+    private static final Color WINDOWS_BACKGROUND_COLOR = new Color(50, 50, 50);
     private static final long serialVersionUID = 1L;
-    private Dimension screenSize;
+    private final Dimension screenSize;
 
-    private Graph aGraph;
+    private final Graph aGraph;
     private AdjacencyList aPath;
 
     public GraphPainter(Graph g){
@@ -60,66 +61,91 @@ public class GraphPainter extends Canvas {
      ********************************************************************************/
 
     public void paint(Graphics g) {
-        int[][] positionsOfVertices = layoutOfGraph();
-        drawEdges(g, positionsOfVertices);
-        drawVertices(g, positionsOfVertices);
-
+        ArrayList<Point> positions = circularLayout(aGraph.numOfVertices());
+        drawEdges(g, positions);
+        drawVertices(g, positions);
     }
 
-    private void drawVertices(Graphics g, int[][] positions){
-        g.setColor(Color.black);
-        for (int v = 0; v < aGraph.numOfVertices(); v++) {
+    private void drawVertices(Graphics g, ArrayList<Point> points){
+        int current = 0;
+        for(Point point : points){
             g.setColor(VERTEX_COLOR);
-            g.fillOval(positions[v][0], positions[v][1], 50, 50);
+            Point newLocation = new Point(point.x - DEFAULT_VERTEX_SIZE/2, point.y -DEFAULT_VERTEX_SIZE/2);
+            g.fillOval(newLocation.x , newLocation.y, DEFAULT_VERTEX_SIZE, DEFAULT_VERTEX_SIZE);
             g.setColor(Color.BLACK);
-            g.drawOval(positions[v][0], positions[v][1], 50, 50);
+            g.drawOval(newLocation.x, newLocation.y, DEFAULT_VERTEX_SIZE, DEFAULT_VERTEX_SIZE);
             g.setFont(new Font("Helvetica", Font.PLAIN, 20));
             g.setColor(Color.WHITE);
-            g.drawString(""+v, positions[v][0]+20, positions[v][1]+32);
+            g.drawString(String.valueOf(current), point.x-5, point.y+5);
+            current++;
         }
     }
 
-    private void drawEdges(Graphics g, int[][] positions){
-        g.setColor(Color.blue);
+    private void drawEdges(Graphics g, ArrayList<Point> points){
+        g.setColor(Color.BLUE);
         for (int u = 0; u < aGraph.numOfVertices(); u++) {
             for (int v = u + 1; v < aGraph.numOfVertices(); v++) {
                 if (aGraph.getWeight(u, v) != 0) {
-                    if (aPath != null && aPath.contains(v)) {
+                    if (aPath != null && aPath.contains(u) && aPath.contains(v)) {
                         g.setColor(Color.red);
                     } else {
                         g.setColor(Color.blue);
                     }
                     int x1, x2, y1, y2;
-                    x1 = positions[u][0]+25;
-                    y1 = positions[u][1]+25;
-                    x2 = positions[v][0]+25;
-                    y2 = positions[v][1]+25;
-                    if(x1 == x2 && y1 == y2){
-                        drawSelfRef(g, x1, y1);
-                    } else{
-                        g.drawLine(
-                                x1, y1,
-                                x2, y2);
-                    }
+                    x1 = points.get(u).x;
+                    y1 = points.get(u).y;
+                    x2 = points.get(v).x;
+                    y2 = points.get(v).y;
+                    g.drawLine(x1, y1,x2, y2);
                 }
             }
         }
     }
-    private void drawSelfRef(Graphics g, int x, int y){
-        g.drawArc(x, y, 100, 100, 0, 360);
+    private void drawCenter(Graphics g){
+        Point center = new Point(screenSize.width/2, screenSize.height/2);
+        g.setColor(Color.GREEN);
+        g.drawLine(center.x-10, center.y, center.x+10, center.y);
+        g.drawLine(center.x, center.y-10, center.x, center.y+10);
     }
-
-    private int[][] layoutOfGraph(){
-        int xMin = DEFAULT_WINDOWS_SIZE.width / 2;
-        return new int[][] {
-                {xMin +   0, 100},
-                {xMin + 200, 200},
-                {xMin + 400, 400},
-                {xMin + 200, 600},
-                {xMin -   0, 700},
-                {xMin - 200, 600},
-                {xMin - 400, 400},
-                {xMin - 200, 200}};
+    private void drawCenter(Graphics g, int x, int y){
+        Point center = new Point(x, y);
+        g.setColor(Color.GREEN);
+        g.drawLine(center.x-10, center.y, center.x+10, center.y);
+        g.drawLine(center.x, center.y-10, center.x, center.y+10);
+    }
+    private ArrayList<Point> circularLayout(int numOfVertex){
+        ArrayList<Point> points = new ArrayList<>();
+        Point center = new Point(screenSize.width/2, screenSize.height/2);
+        int vector_x = 0;
+        int vector_y = -200;
+        double angle = 360/numOfVertex;
+        for (int i = 0; i < numOfVertex; i++){
+            double currentAngle = angle*i;
+            double cos = Math.cos(Math.toRadians(currentAngle));
+            double sin = Math.sin(Math.toRadians(currentAngle));
+            int tempX = (int) ((cos * vector_x)-(sin * vector_y));
+            int tempY = (int) ((sin * vector_x)+(cos * vector_y));
+            points.add(new Point(center.x + tempX, center.y+tempY));
+        }
+        return points;
+    }
+    private ArrayList<Point> squareLayout(int numOfVertex){
+        ArrayList<Point> points = new ArrayList<>();
+        int offset = screenSize.width/numOfVertex;
+        int rows, columns;
+        rows = numOfVertex/2;
+        columns = 2;
+        int currentX = 0;
+        int currentY = 0;
+        for(int y = 0; y < columns; y++){
+            currentY += offset;
+            for (int x = 0; x < rows; x++){
+                currentX+=offset;
+                points.add(new Point(currentX, currentY));
+            }
+            currentX = 0;
+        }
+        return points;
     }
 
     /********************************************************************************
@@ -142,20 +168,22 @@ public class GraphPainter extends Canvas {
 
         GraphPainter painter = new GraphPainter(g);
 
-        AdjacencyList aPath = g.somePath(0, 3);
+        AdjacencyList aPath = g.somePath(0, 10);
         painter.setAPath(aPath);
-
+        // print Path adjList
+        System.out.printf("A path: ");
+        Iterator aPathIterator = aPath.iterator();
+        while(aPathIterator.hasNext()){
+            System.out.printf("%d -> ", aPathIterator.next());
+        }
+        System.out.printf("\n");
         // Print all the vertices and their neighbours
         for (int v = 0; v < g.numOfVertices(); v++) {
             System.out.print("Number Of Neighbours "+v+":");
             AdjacencyList adjList = g.getNeighboursFor(v);
             //this wont work
-            //for (Integer neighbour: adjList) {
-            //    System.out.print(" " + neighbour.toString());
-            //}
-            Iterator iterator = adjList.iterator();
-            while(iterator.hasNext()){
-                System.out.print(" " + String.valueOf(iterator.next()));
+            for (Integer neighbour: adjList) {
+                System.out.print(" " + neighbour.toString());
             }
             System.out.println();
         }

@@ -5,7 +5,7 @@ import org.w3c.dom.Node;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-public class AdjacencyList implements Iterable<Integer>{//this is some illegal shit right there
+public class AdjacencyList implements Iterable<Integer>{
     private LinkedList<Integer> neighbours;
     private int id;
     public AdjacencyList(int id){
@@ -33,16 +33,16 @@ public class AdjacencyList implements Iterable<Integer>{//this is some illegal s
     @Override
     public Iterator<Integer> iterator() {
         return new Iterator<Integer>() {
-            int tmp = 0;
+            private int index = 0;
             public boolean hasNext() {
-                return tmp<neighbours.size();
+                return index<neighbours.size();
             }
 
             @Override
             public Integer next() {
-                Integer current_element = neighbours.get(tmp);
-                tmp++;
-                return current_element;
+                Integer currentElement = neighbours.get(index);
+                index++;
+                return currentElement;
             }
         };
     }
